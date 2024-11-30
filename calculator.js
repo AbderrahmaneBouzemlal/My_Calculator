@@ -22,18 +22,24 @@ function tokenize(e) {
 function parseParentheses(tokens) {
   let output = [];
   let stack = [];
+  let betweenPerenthesis = [];
+  let flag = 0;
 
   for (let token of tokens) {
     if (token === '(') {
-      stack.push(output.length);
+      flag = 1;
     } else if (token === ')') {
-      let beginParenthesis = stack.pop();
-      const betweenPerenthesis = tokens.slice(++beginParenthesis, ++output.length);
+      flag = 0;
       const result = evaluate(parse(betweenPerenthesis));
-      output.push(result);
+      betweenPerenthesis = [];
+      output.push(String(result));
     } else {
-      output.push(token);
-      console.log(output);
+      if (flag === 1) {
+        betweenPerenthesis.push(token)
+      }
+      else {
+        output.push(token);
+      }
     }
   }
   return output;
@@ -53,7 +59,7 @@ function parse(tokens) {
   function parseTerm(index) {
     let [left, nextIndex] = parseFactor(index);
 
-    while (nextIndex < tokens.length && ['*', '/'].includes(tokens[nextIndex])) {
+    while (nextIndex < tokens.length && ['×', '÷', '√', '^', '%'].includes(tokens[nextIndex])) {
       const operator = tokens[nextIndex++];
       const [right, next] = parseFactor(nextIndex);
       left = { type: "operator", value: operator, left, right };
@@ -64,10 +70,20 @@ function parse(tokens) {
 
   function parseFactor(index) {
     const token = tokens[index];
+    if (token === undefined) {
+      throw new Error('Unexpected end of expression');
+    }
+    
+    if (token === '²') {
+      const [prevToken, prevIndex] = parseFactor(index - 1);
+      console.log(prevToken, prevIndex);
+      return [{ type: "number", value: Math.pow(Number(prevToken.value), 2) }, index + 1];
+    }
     return [{ type: "number", value: Number(token) }, index + 1];
   }
 
   return parseExp()[0];
+
 }
 
 
@@ -81,7 +97,21 @@ function evaluate(ast) {
       case "+": return left + right;
       case "-": return left - right;
       case "×": return left * right;
-      case "÷": return left / right;
+      case "^": return Math.pow(left, right);
+      case "²": return Math.pow(left, 2);
+      case "√":
+        if (left === '') {
+          left = 1;
+        }
+        return left * Math.sqrt(right);
+      case "%": return left % right;
+      case "÷": 
+        if (right === 0) {
+          throw new Error ("Division by zero is forbidden in mathmatic");
+        }
+        return left / right;
+      default:
+        throw new Error(`Unsupported operator: ${ast.value}`);
     }
   }
 }

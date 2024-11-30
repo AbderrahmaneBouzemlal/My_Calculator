@@ -1,9 +1,15 @@
 {
-    "devDependencies": {
-        "jest": "^29.7.0"
-    },
-    "scripts": {
-        "test": "jest"
-    }
+  "name": "my_calculator",
+  "version": "1.0.0",
+  "description": "This is an app where I cloned the redmi calculator where there is many features ## The normal_calculator This function will evaluate the calculation entered by the user",
+  "main": "main.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  }
 }
-
