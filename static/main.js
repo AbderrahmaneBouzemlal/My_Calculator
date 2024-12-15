@@ -34,7 +34,7 @@ class Calculator {
   handleKeyboardInput(event) {
     const key = event.key;
     const allowedPattern = /[\d\.,\+\-÷\*√×%()^²]/;
-    if (key.includes[['Shift', 'Controle']]) {
+    if (key.includes[['Shift', 'Control']]) {
       this.shorCutsProcessing(event.key);
       return;
     }
@@ -61,7 +61,34 @@ class Calculator {
     }
   }
 
-  isValidInput(expression) {
+  isValidExpression(expression) {
+    expression = expression.trim();
+
+    if (expression.length === 0) {
+      this.handleError('Empty Expression');
+      return false;
+    }
+
+    const incompletePatterns = [
+      /[+\-×÷^%]$/,
+      /\($/,
+      /\.[+\-×÷^%]/,
+    ];
+
+    for (let pattern of incompletePatterns) {
+      if (pattern.test(expression)) {
+        this.handleError('Incomplete Expression');
+        return false;
+      }
+    }
+
+    const openParens = (expression.match(/\(/g) || []).length;
+    const closeParens = (expression.match(/\)/g) || []).length;
+    if (openParens !== closeParens) {
+      this.handleError('Mismatched Parentheses');
+      return false;
+    }
+
     return true;
   }
 
@@ -74,6 +101,8 @@ class Calculator {
 
   calculateResult() {
     if (this.expression === '') return;
+  
+    if (!this.isValidExpression(this.expression)) return;
 
     try {
       this.result = calculate(this.expression);
@@ -88,18 +117,34 @@ class Calculator {
         return;
       }
       const historyDivElement = document.createElement("div");
-      historyDivElement.innerText = `${this.expression} = ${this.result}`;
-      this.history.appendChild(historyDivElement);
-      this.screen.value = this.result;
-      this.expression = '';
-      this.lastClick = true;
-    } catch (error) {
-      this.handleError('Calculation Error');
-    }
-    this.keepFocus();
+    historyDivElement.innerHTML = `
+      <span class="history-expression">${this.expression}</span>
+      <span class="history-result">= ${this.result}</span>
+    `;
+    this.history.appendChild(historyDivElement);
+    
+    this.history.scrollTop = this.history.scrollHeight;
+
+    this.screen.value = this.result;
+    this.expression = this.result.toString();
+    this.lastClick = true;
+  } catch (error) {
+    this.handleError('Calculation Error');
+  }
+  
+  this.keepFocus();
   }
 
   updateExpression(buttonText) {
+    const operators = ['+', '-', '×', '÷', '^', '%'];
+    const lastChar = this.expression.slice(-1);
+
+    if (operators.includes(lastChar) && operators.includes(buttonText)) {
+      this.expression = this.expression.slice(0, -1) + buttonText;
+      this.screen.value = this.expression;
+      return;
+    }
+
     if (buttonText === 'x²') {
       buttonText = '²';
     }
@@ -114,8 +159,8 @@ class Calculator {
       }
       this.lastClick = false;
     } else {
-      this.screen.value += buttonText;
       this.expression += buttonText;
+      this.screen.value += buttonText;
     }
   }
 
@@ -136,8 +181,9 @@ class Calculator {
 
 
   handleError(message) {
-    const errorDisplay = document.createElement('div');
-    errorDisplay.classList.add('error-notification');
+    const errorDisplay = document.body.createElement('div');
+    errorDisplay.className = 'error-notification';
+    errorDisplay.style.backgroundColor = 'red';
     errorDisplay.textContent = message;
     document.body.appendChild(errorDisplay);
 
