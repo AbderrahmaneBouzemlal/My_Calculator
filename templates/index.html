@@ -4,39 +4,27 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="/static/style.css">
-    <link rel="icon" type="image/x-icon" href="/images/favico.ico">
+    <link rel="icon" type="image/x-icon" href="favico.png">
+    <script src="https://kit.fontawesome.com/05f4f5308c.js" crossorigin="anonymous"></script>
     <title>My Calculator</title>
 </head>
 <body>
     <header class="header">
         <div class="basic">Basic</div>
         <div class="advanced">Advanced</div>
-        <div class="financial">Financial</div>
-        <div class="programing">Programming</div>
-        <div class="more">
-            <p>More</p>
-            <ul>
-                <li><div>Currency</div></li>
-                <li><div>Age</div></li>
-                <li><div>Area</div></li>
-                <li><div>BMI</div></li>
-                <li><div>Date</div></li>
-                <li><div>Discount</div></li>
-                <li><div>Length</div></li>
-                <li><div>Mass</div></li>
-                <li><div>Speed</div></li>
-                <li><div>Temperature</div></li>
-                <li><div>Time</div></li>
-                <li><div>Volume</div></li>
-            </ul>
-        </div>
+        <div class="graph">graphs</div>
     <div class="mode"></div>
     </header>
     <div class="calculator">
-        <div class="history"></div>
+        <div class="history">
+           <div class="delete-container">
+                <i class="fa-solid fa-trash fa-lg" id="delete-history"></i>
+            </div>
+        </div>
         <div class="screen-container">
             <input name="screen" class="screen">
-            <div class="message"></div>
+            <div class="validation-status"></div>
+            <div class="preview-result"></div>
         </div>
         <div class="buttons">
             <div>C</div>

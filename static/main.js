@@ -5,11 +5,14 @@ class Calculator {
     this.buttons = document.querySelectorAll('.buttons > div');
     this.screen = document.querySelector('.screen');
     this.history = document.querySelector('.history');
-    this.message = document.querySelector('.screen-container .message');
+    this.deleteButton = document.querySelector('#delete-history');
     this.expression = '';
     this.result = 0;
+    this.id = 0;
     this.lastClick = false;
     this.screen.value = '';
+    this.previewElement = document.querySelector('.preview-result');
+    this.validationElement = document.querySelector('.validation-status');
     this.screen.focus();
     this.initializeEventListeners();
   }
@@ -22,6 +25,7 @@ class Calculator {
     this.buttons.forEach(button => {
       button.addEventListener('click', () => this.handleButtonClick(button));
     });
+    this.deleteButton.addEventListener('click', () => this.deleteAll());
     this.screen.addEventListener('input', this.handleScreenInput.bind(this));
     document.addEventListener('keydown', this.handleKeyboardInput.bind(this));
     this.keepFocus();
@@ -29,6 +33,7 @@ class Calculator {
 
   handleScreenInput(event) {
     this.expression = this.screen.value;
+    this.validateAndPreCalculate();
   }
 
   handleKeyboardInput(event) {
@@ -41,56 +46,115 @@ class Calculator {
     const specialMappings = {
       'Enter': () => this.calculateResult(),
       'Escape': () => this.clearCalculator(),
-      '*': () => this.addToExpression('×'),
-      '/': () => this.addToExpression('÷'),
-      ',': () => this.addToExpression('.')
+      '*': () => this.updateExpression('×'),
+      '/': () => this.updateExpression('÷'),
+      ',': () => this.updateExpression('.')
     };
 
     if (specialMappings[key]) {
       specialMappings[key]();
       event.preventDefault();
     } else if (allowedPattern.test(key) && key !== "Backspace") {
-      this.addToExpression(key);
+      this.updateExpression(key);
       event.preventDefault();
     }
+    this.keepFocus();
   }
 
-  addToExpression(character) {
-    if (this.isValidInput(character)) {
-      this.updateExpression(character);
-    }
-  }
 
-  isValidExpression(expression) {
-    expression = expression.trim();
+  validateAndPreCalculate() {
+    const expression = this.screen.value.trim();
 
     if (expression.length === 0) {
-      this.handleError('Empty Expression');
-      return false;
+      this.clearValidationFeedback();
+      return;
     }
 
-    const incompletePatterns = [
-      /[+\-×÷^%]$/,
-      /\($/,
-      /\.[+\-×÷^%]/,
+    const validationResults = this.expressionValidation(expression);
+
+    if (validationResults.isValid) {
+      try {
+        const previewResult = calculate(expression);
+
+        if (isNaN(previewResult)) {
+          this.showValidationFeedback('warning', 'Incomplete calculation');
+          this.clearPreviewResult();
+        } else {
+          this.showValidationFeedback('success', 'Valid expression');
+          this.showPreviewResult(previewResult);
+        }
+      } catch (error) {
+        this.showValidationFeedback('error', 'Cannot calculate');
+        this.clearPreviewResult();
+      }
+    } else {
+      this.showValidationFeedback('error', validationResults.message);
+      this.clearPreviewResult();
+    }
+  }
+
+
+  expressionValidation(expression) {
+    const checks = [
+      {
+        test: () => expression.length === 0,
+        message: 'Empty expression'
+      },
+      {
+        test: () => /[+\-×÷^%]$/.test(expression),
+        message: 'Expression cannot end with an operator'
+      },
+      {
+        test: () => /\($/.test(expression),
+        message: 'Unclosed parenthesis'
+      },
+      {
+        test: () => {
+          const openParens = (expression.match(/\(/g) || []).length;
+          const closeParens = (expression.match(/\)/g) || []).length;
+          return openParens !== closeParens;
+        },
+        message: 'Mismatched parentheses'
+      },
+      {
+        test: () => /\.{2,}/.test(expression),
+        message: 'Multiple consecutive decimal points'
+      }
     ];
 
-    for (let pattern of incompletePatterns) {
-      if (pattern.test(expression)) {
-        this.handleError('Incomplete Expression');
-        return false;
+    for (let check of checks) {
+      if (check.test()) {
+        return { isValid: false, message: check.message };
       }
     }
 
-    const openParens = (expression.match(/\(/g) || []).length;
-    const closeParens = (expression.match(/\)/g) || []).length;
-    if (openParens !== closeParens) {
-      this.handleError('Mismatched Parentheses');
-      return false;
-    }
-
-    return true;
+    return { isValid: true, message: 'Valid expression' };
   }
+
+  showValidationFeedback(status, message) {
+    if (!this.validationElement) return;
+    this.validationElement.textContent = message;
+    this.validationElement.className = `validation-status ${status}`;
+  }
+
+  clearValidationFeedback() {
+    if (!this.validationElement) return;
+    this.validationElement.textContent = '';
+    this.validationElement.className = 'validation-status';
+  }
+
+  showPreviewResult(result) {
+    if (!this.previewElement) return;
+    this.previewElement.textContent = `= ${result}`;
+    this.previewElement.style.display = 'block';
+  }
+
+  clearPreviewResult() {
+    if (!this.previewElement) return;
+    this.previewElement.textContent = '';
+    this.previewElement.style.display = 'none';
+  }
+
 
   clearCalculator() {
     this.expression = '';
@@ -102,11 +166,11 @@ class Calculator {
   calculateResult() {
     if (this.expression === '') return;
   
-    if (!this.isValidExpression(this.expression)) return;
+    // if (!this.isValidExpression(this.expression)) return;
 
     try {
       this.result = calculate(this.expression);
-      
+
       if (isNaN(this.result)) {
         this.handleError('Math Error');
         return;
@@ -117,22 +181,31 @@ class Calculator {
         return;
       }
       const historyDivElement = document.createElement("div");
+      historyDivElement.className = 'history-div-element';
     historyDivElement.innerHTML = `
-      <span class="history-expression">${this.expression}</span>
-      <span class="history-result">= ${this.result}</span>
+      <span class="history-expression" id="${this.id}">${this.expression}</span>
+      <span class="equal">=</span>
+      <span class="history-result" id="${this.id}">${this.result}</span>
     `;
     this.history.appendChild(historyDivElement);
-    
     this.history.scrollTop = this.history.scrollHeight;
-
     this.screen.value = this.result;
     this.expression = this.result.toString();
     this.lastClick = true;
+    this.id++;
   } catch (error) {
     this.handleError('Calculation Error');
   }
-  
+
   this.keepFocus();
+  }
+
+  deleteAll() {
+    const elements = document.querySelectorAll('.history-div-element');
+    for (let element of elements) {
+      element.remove();
+    }
+    elements.remove();
   }
 
   updateExpression(buttonText) {
@@ -162,6 +235,7 @@ class Calculator {
       this.expression += buttonText;
       this.screen.value += buttonText;
     }
+    this.validateAndPreCalculate();
   }
 
  handleButtonClick(button) {
@@ -181,16 +255,6 @@ class Calculator {
 
 
   handleError(message) {
-    const errorDisplay = document.body.createElement('div');
-    errorDisplay.className = 'error-notification';
-    errorDisplay.style.backgroundColor = 'red';
-    errorDisplay.textContent = message;
-    document.body.appendChild(errorDisplay);
-
-    setTimeout(() => {
-      document.body.removeChild(errorDisplay);
-    }, 3000);
-
     this.screen.value = '';
     this.expression = '';
     this.lastClick = false;

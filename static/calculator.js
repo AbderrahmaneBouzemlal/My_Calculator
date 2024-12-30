@@ -6,11 +6,34 @@ export function calculate(expression) {
   return result;
 }
 
+function sin(x) { return Math.sin(x); }
+function cos(x) { return Math.cos(x); }
+function tan(x) { return Math.tan(x); }
+function arcsin(x) { return Math.asin(x); }
+function arccos(x) { return Math.acos(x); }
+function arctan(x) { return Math.atan(x); }
+function log(x) { return Math.log10(x); }
+function ln(x) { return Math.log(x); }
+function exp(x) { return Math.exp(x); }
+
+function factorial(n) {
+  if (n < 0) throw new Error('Factorial is not defined for negative numbers');
+  if (n === 0 || n === 1) return 1;
+  return n * factorial(n - 1);
+}
+
+function combinations(n, k) {
+  return factorial(n) / (factorial(k) * factorial(n - k));
+}
+
+function permutations(n, k) {
+  return factorial(n) / factorial(n - k);
+}
 
 function tokenize(expression) {
   const tokens = [];
   const tokenRegex = /(-?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?|π|[+\-÷*/√×%()^²]|[a-zA-Z_]\w*)/g;
-  
+
   let match;
   while ((match = tokenRegex.exec(expression)) !== null) {
     const token = match[0];

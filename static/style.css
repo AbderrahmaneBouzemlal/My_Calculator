@@ -31,38 +31,6 @@ body {
     background-color: #f0f0f0;
 }
 
-.more {
-    position: relative;
-}
-
-.more ul {
-    display: none;
-    position: absolute;
-    top: 100%;
-    left: 0;
-    background: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-    border-radius: 5px;
-    padding: 10px 0;
-    width: 150px;
-    z-index: 1000;
-}
-
-.more:hover ul {
-    display: block;
-}
-
-.more ul li {
-    list-style: none;
-    padding: 8px 15px;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-
-.more ul li:hover {
-    background-color: #f0f0f0;
-}
-
 .calculator {
     max-width: 600px;
     margin: 0 auto;
@@ -84,11 +52,32 @@ body {
     color: #666;
     border: 1px solid #e0e0e0;
 }
+.delete-container {
+    display: flex;
+    flex-direction: row-reverse;
+}
+#delete-history {
+    color: #77767b;
+    cursor: pointer;
+    margin-top: 10px;
+    margin-bottom: 15px;
+}
+#delete-history:hover {
+    color: #ED4337;
+}
+.history .history-div-element:hover {
+    background-color: #645147;
+}
 
-.error-notification {
-    background-color: darkred;
-    padding: 20px;
-    border: 1px solid white;
+.history-expression {
+    display: inline-block;
+    width: 48%;
+}
+
+.history-result {
+    display: inline-block;
+    width: 49%;
+    text-align: right;
 }
 
 .screen-container {
@@ -114,6 +103,20 @@ body {
     outline: none;
     color: #fff;
     caret-color: #f0f0f0;
+}
+
+.validation-status {
+  font-size: 0.8em;
+  padding: 5px;
+}
+
+.validation-status.success { color: green; }
+.validation-status.warning { color: orange; }
+.validation-status.error { color: #ED4337; }
+
+.preview-result {
+  color: gray;
+  font-style: italic;
 }
 
 .buttons {
@@ -192,12 +195,7 @@ body {
         background-color: #4d4d4d;
     }
     
-    .header > div:hover,
-    .more ul li:hover {
+    .header > div:hover {
         background-color: #3d3d3d;
-    }
-    
-    .more ul {
-        background-color: #2d2d2d;
     }
 }
